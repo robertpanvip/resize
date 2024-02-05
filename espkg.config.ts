@@ -1,7 +1,8 @@
-import {defineConfig} from "es-pkg";
+import { defineConfig } from "es-pkg";
 
 export default defineConfig({
     "es": "./es",
     "lib": "./lib",
-    "publishDir":"../resize-npm"
+    "publishDir": "../resize-npm",
+    "typings": './es'
 })
