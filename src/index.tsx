@@ -46,6 +46,17 @@ export interface ResizeProps
 }
 
 const defaultMinSize = { width: 0, height: 0 };
+
+function createMask() {
+  const mask = document.createElement("div");
+  mask.style.position = "fixed";
+  mask.style.width = "100vw";
+  mask.style.height = "100vh";
+  mask.style.left = "0";
+  mask.style.top = "0";
+  return mask;
+}
+
 /**
  * 调整元素的宽高
  * @param className
@@ -76,7 +87,7 @@ const Resize = (
   }: ResizeProps,
   exportRef: React.Ref<HTMLDivElement | null>
 ) => {
-  const ref = useRef<any>({});
+  const ref = useRef<{ dragStart?: number; cssText?: string }>({});
   const drag = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>();
 
@@ -107,6 +118,8 @@ const Resize = (
     e: React.MouseEvent<HTMLDivElement>,
     direction: string
   ) => {
+    const mask = createMask();
+    HTMLElement.prototype.appendChild.call(document.body, mask);
     const mouseDownTime = Date.now();
     const len =
       direction === "left" || direction === "right" ? "width" : "height";
@@ -123,7 +136,7 @@ const Resize = (
     const getDimension = (e: MouseEvent) => (isWidth ? e.clientX : e.clientY);
 
     const moveListener = (e: MouseEvent) => {
-      const diff = getDimension(e) - ref.current.dragStart;
+      const diff = getDimension(e) - ref.current.dragStart!;
       const _size = isRightOrBottom ? size + diff : size - diff;
       if (_size > _minSize[len]) {
         drag.current!.style[len] = `${_size}px`;
@@ -131,11 +144,12 @@ const Resize = (
       onResize?.(e);
     };
     const upListener = (e: MouseEvent) => {
+      mask.remove();
       document.removeEventListener("mousemove", moveListener);
       document.removeEventListener("mouseup", upListener);
       document.removeEventListener("drag", moveListener);
       document.removeEventListener("dragend", upListener);
-      const diff = getDimension(e) - ref.current.dragStart;
+      const diff = getDimension(e) - ref.current.dragStart!;
       const _size = isRightOrBottom ? size + diff : size - diff;
       if (_size > _minSize[len]) {
         drag.current!.style[len] = `${_size}px`;
